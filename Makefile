@@ -1,17 +1,17 @@
-TARGET = psp-tests
-OBJS = main.o
+TARGET      = psp-tests
+OBJS        = main.o
+    
+INCDIR      = 
+CFLAGS      = -G0 -Wall
+CXXFLAGS    = $(CFLAGS) -fno-exceptions -fno-rtti
+ASFLAGS     = $(CFLAGS)
+    
+LIBDIR      =
+LDFLAGS     =
+LIBS        = -lpspgum -lpspgu -lm
 
-INCDIR = 
-CFLAGS = -G0 -Wall
-CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti
-ASFLAGS = $(CFLAGS)
-
-LIBDIR =
-LDFLAGS =
-LIBS = -lpspgum -lpspgu -lm
-
-EXTRA_TARGETS = EBOOT.PBP
-PSP_EBOOT_TITLE = PSP_TESTS
+EXTRA_TARGETS    = EBOOT.PBP
+PSP_EBOOT_TITLE  = PSP_TESTS
 
 PSPSDK=$(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak

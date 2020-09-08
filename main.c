@@ -31,14 +31,14 @@ static uint32_t ALIGN(16) g_dspList[262144];
 typedef struct
 {
     uint32_t DiffuseColor;
-	float Position[3];
+    float Position[3];
 } VertexInput;
 
 const VertexInput ALIGN(16) vertices[] =
 {
     { 0xFF0000FF, { -0.50f ,-0.25f, 1.0f } },
-	{ 0xFF00FF00, {  0.00f , 0.25f, 1.0f } },
-	{ 0xFFFF0000, {  0.50f ,-0.25f, 1.0f } }
+    { 0xFF00FF00, {  0.00f , 0.25f, 1.0f } },
+    { 0xFFFF0000, {  0.50f ,-0.25f, 1.0f } }
 }; const uint32_t nVertices = sizeof(vertices) / sizeof(VertexInput);
 
 // VRAM Alloc
@@ -55,149 +55,149 @@ int32_t CallbackThread(SceSize args, void *argp);
 
 int main()
 {
-	int32_t threadId = sceKernelCreateThread("update_thread", CallbackThread, 0x11, 0xFA0, 0, 0);
-	assert(threadId >= 0);
+    int32_t threadId = sceKernelCreateThread("update_thread", CallbackThread, 0x11, 0xFA0, 0, 0);
+    assert(threadId >= 0);
 
-	sceKernelStartThread(threadId, 0, 0);
-	
-	void* pFrontBuffer = GetStaticVramBuffer(BUFFER_WIDTH, SCREEN_H, GU_PSM_8888);
-	void* pBackBuffer  = GetStaticVramBuffer(BUFFER_WIDTH, SCREEN_H, GU_PSM_8888);
-	void* pDepthBuffer = GetStaticVramBuffer(BUFFER_WIDTH, SCREEN_H, GU_PSM_4444);
-		
-	sceGuInit();
-	sceGuStart(GU_DIRECT, g_dspList);
-	
-	// Setup VRAM buffers
-	
-	sceGuDrawBuffer(GU_PSM_8888, pFrontBuffer, BUFFER_WIDTH);
-	sceGuDispBuffer(SCREEN_W, SCREEN_H, pBackBuffer, BUFFER_WIDTH);
-	
-	sceGuOffset(2048 - (SCREEN_W / 2), 2048 - (SCREEN_H / 2));
-	sceGuViewport(2048, 2048, SCREEN_W, SCREEN_H);
-	
-	// Depth buffer
-
-	sceGuDepthBuffer(pDepthBuffer, BUFFER_WIDTH);
-	sceGuDepthRange(65535, 0);
-	sceGuDepthFunc(GU_GEQUAL);
-	
-	// Culling
-	
-	sceGuFrontFace(GU_CW);
-	sceGuDisable(GU_CULL_FACE);
-	
-	// Misc
-	
-	sceGuShadeModel(GU_SMOOTH);
-	sceGuScissor(0, 0, SCREEN_W, SCREEN_H);
-	
-	sceGuEnable(GU_SCISSOR_TEST);
-	sceGuEnable(GU_DEPTH_TEST);
-	sceGuEnable(GU_CLIP_PLANES);
+    sceKernelStartThread(threadId, 0, 0);
+    
+    void* pFrontBuffer = GetStaticVramBuffer(BUFFER_WIDTH, SCREEN_H, GU_PSM_8888);
+    void* pBackBuffer  = GetStaticVramBuffer(BUFFER_WIDTH, SCREEN_H, GU_PSM_8888);
+    void* pDepthBuffer = GetStaticVramBuffer(BUFFER_WIDTH, SCREEN_H, GU_PSM_4444);
+        
+    sceGuInit();
+    sceGuStart(GU_DIRECT, g_dspList);
+    
+    // Setup VRAM buffers
+    
+    sceGuDrawBuffer(GU_PSM_8888, pFrontBuffer, BUFFER_WIDTH);
+    sceGuDispBuffer(SCREEN_W, SCREEN_H, pBackBuffer, BUFFER_WIDTH);
+    
+    sceGuOffset(2048 - (SCREEN_W / 2), 2048 - (SCREEN_H / 2));
+    sceGuViewport(2048, 2048, SCREEN_W, SCREEN_H);
+    
+    // Depth buffer
+    
+    sceGuDepthBuffer(pDepthBuffer, BUFFER_WIDTH);
+    sceGuDepthRange(65535, 0);
+    sceGuDepthFunc(GU_GEQUAL);
+    
+    // Culling
+    
+    sceGuFrontFace(GU_CW);
+    sceGuDisable(GU_CULL_FACE);
+    
+    // Misc
+    
+    sceGuShadeModel(GU_SMOOTH);
+    sceGuScissor(0, 0, SCREEN_W, SCREEN_H);
+    
+    sceGuEnable(GU_SCISSOR_TEST);
+    sceGuEnable(GU_DEPTH_TEST);
+    sceGuEnable(GU_CLIP_PLANES);
     
     sceGuDisable(GU_TEXTURE_2D);
-	
-	sceGuFinish();
-	sceGuSync(0, 0);
-	
-	sceDisplayWaitVblankStart();
-	sceGuDisplay(GU_TRUE);
-	
-	while (!g_exitRequest)
-	{
-		sceGuStart(GU_DIRECT, g_dspList);
-		
-		sceGuClearColor(0xFF2D2D2D);
-		sceGuClearDepth(0);
-		
-		sceGuClear(GU_COLOR_BUFFER_BIT | GU_DEPTH_BUFFER_BIT);
+    
+    sceGuFinish();
+    sceGuSync(0, 0);
+    
+    sceDisplayWaitVblankStart();
+    sceGuDisplay(GU_TRUE);
+    
+    while (!g_exitRequest)
+    {
+        sceGuStart(GU_DIRECT, g_dspList);
+        
+        sceGuClearColor(0xFF2D2D2D);
+        sceGuClearDepth(0);
+        
+        sceGuClear(GU_COLOR_BUFFER_BIT | GU_DEPTH_BUFFER_BIT);
         
         // Setup matrices
         
         sceGumMatrixMode(GU_PROJECTION);
-		sceGumLoadIdentity();
-		sceGumPerspective(75.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
+        sceGumLoadIdentity();
+        sceGumPerspective(75.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
         
         sceGumMatrixMode(GU_VIEW);
-		sceGumLoadIdentity();
-
+        sceGumLoadIdentity();
+        
         sceGumMatrixMode(GU_MODEL);
-		sceGumLoadIdentity();
+        sceGumLoadIdentity();
         {
-			ScePspFVector3 pos = { 0.0f, 0.0f, -2.0f };
-			sceGumTranslate(&pos);
-		}
+            ScePspFVector3 pos = { 0.0f, 0.0f, -2.0f };
+            sceGumTranslate(&pos);
+        }
         
         sceGumDrawArray(GU_TRIANGLES, VERTEX_FORMAT, nVertices, NULL, vertices);
         
-		sceGuFinish();
-		sceGuSync(0, 0);
-		
-		sceDisplayWaitVblankStart();
-		sceGuSwapBuffers();
-	}
-	
-	sceGuTerm();
-	sceKernelExitGame();
-	
-	return 0;
+        sceGuFinish();
+        sceGuSync(0, 0);
+        
+        sceDisplayWaitVblankStart();
+        sceGuSwapBuffers();
+    }
+    
+    sceGuTerm();
+    sceKernelExitGame();
+    
+    return 0;
 }
 
 // Definitions
 
 int32_t ExitCallback(int32_t arg1, int32_t arg2, void *common)
 {
-	g_exitRequest = 1;
-	return 0;
+    g_exitRequest = 1;
+    return 0;
 }
 
 int32_t CallbackThread(SceSize args, void *argp)
 {
-	int32_t exitCallbackId = sceKernelCreateCallback("Exit Callback", ExitCallback, NULL);
-	
-	sceKernelRegisterExitCallback(exitCallbackId);
-	sceKernelSleepThreadCB();
-
-	return 0;
+    int32_t exitCallbackId = sceKernelCreateCallback("Exit Callback", ExitCallback, NULL);
+    
+    sceKernelRegisterExitCallback(exitCallbackId);
+    sceKernelSleepThreadCB();
+    
+    return 0;
 }
 
 static uint32_t GetMemorySize(uint32_t width, uint32_t height, uint32_t psm)
 {
-	switch (psm)
-	{
-		case GU_PSM_T4:
-			return (width * height) >> 1;
-
-		case GU_PSM_T8:
-			return width * height;
-
-		case GU_PSM_5650:
-		case GU_PSM_5551:
-		case GU_PSM_4444:
-		case GU_PSM_T16:
-			return 2 * width * height;
-
-		case GU_PSM_8888:
-		case GU_PSM_T32:
-			return 4 * width * height;
-
-		default:
-			return 0;
-	}
+    switch (psm)
+    {
+        case GU_PSM_T4:
+            return (width * height) >> 1;
+        
+        case GU_PSM_T8:
+            return width * height;
+        
+        case GU_PSM_5650:
+        case GU_PSM_5551:
+        case GU_PSM_4444:
+        case GU_PSM_T16:
+            return 2 * width * height;
+        
+        case GU_PSM_8888:
+        case GU_PSM_T32:
+            return 4 * width * height;
+        
+        default:
+            return 0;
+    }
 }
 
 void* GetStaticVramBuffer(uint32_t width, uint32_t height, uint32_t psm)
 {
-	uint32_t memSize = GetMemorySize(width, height, psm);
-	
-	void* result = (void*)g_staticOffset;
-	g_staticOffset += memSize;
-
-	return result;
+    uint32_t memSize = GetMemorySize(width, height, psm);
+    
+    void* result = (void*)g_staticOffset;
+    g_staticOffset += memSize;
+    
+    return result;
 }
 
 void* GetStaticVramTexture(uint32_t width, uint32_t height, uint32_t psm)
 {
-	void* result = GetStaticVramBuffer(width, height, psm);
-	return (void*)(((uint32_t)result) + ((uint32_t)sceGeEdramGetAddr()));
+    void* result = GetStaticVramBuffer(width, height, psm);
+    return (void*)(((uint32_t)result) + ((uint32_t)sceGeEdramGetAddr()));
 }
