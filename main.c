@@ -13,7 +13,7 @@
 
 #define ALIGN(n) __attribute__((aligned(n)))
 
-#define VERTEX_FORMAT (GU_COLOR_8888 | GU_VERTEX_32BITF | GU_TRANSFORM_3D)
+#define VERTEX_FORMAT (GU_COLOR_8888 | GU_VERTEX_32BITF | GU_INDEX_16BIT | GU_TRANSFORM_3D)
 
 #define SCREEN_W 480
 #define SCREEN_H 272
@@ -38,10 +38,36 @@ typedef struct
 
 const VertexInput ALIGN(16) vertices[] =
 {
-    { 0xFF0000FF, { -0.50f ,-0.25f, 1.0f } },
-    { 0xFF00FF00, {  0.00f , 0.25f, 1.0f } },
-    { 0xFFFF0000, {  0.50f ,-0.25f, 1.0f } },
-}; const uint32_t nVertices = sizeof(vertices) / sizeof(VertexInput);
+    { 0xFF000000, { -1.0f, -1.0f, -1.0f } },
+    { 0xFF0000FF, { -1.0f, -1.0f,  1.0f } },
+    { 0xFF00FF00, { -1.0f,  1.0f, -1.0f } },
+    { 0xFF00FF00, { -1.0f,  1.0f,  1.0f } },
+    { 0xFFFF0000, {  1.0f, -1.0f, -1.0f } },
+    { 0xFFFF00FF, {  1.0f, -1.0f,  1.0f } },
+    { 0xFFFFFF00, {  1.0f,  1.0f, -1.0f } },
+    { 0xFFFFFFFF, {  1.0f,  1.0f,  1.0f } },
+};
+
+const uint16_t indices[] = 
+{
+    0,2,1,
+    1,2,3,
+
+    4,5,6,
+    5,7,6,
+
+    0,1,5,
+    0,5,4,
+
+    2,6,7,
+    2,7,3,
+
+    0,4,6,
+    0,6,2,
+
+    1,3,7,
+    1,7,5,
+}; const uint32_t nIndices = sizeof(indices) / sizeof(uint16_t);
 
 // VRAM Alloc
 
@@ -102,21 +128,33 @@ int main()
     
     sceGuDisable(GU_TEXTURE_2D);
     
+    // Setup transform matrices
+    
+    sceGumMatrixMode(GU_PROJECTION);
+    sceGumLoadIdentity();
+    sceGumPerspective(75.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
+    
+    sceGumMatrixMode(GU_VIEW);
+    sceGumLoadIdentity();
+    {
+        const ScePspFVector3 position = { 0.0f, 0.0f, -4.0f };
+        sceGumTranslate(&position);
+    }
+    
+    sceGumMatrixMode(GU_MODEL);
+    sceGumLoadIdentity();
+    
     sceGuFinish();
     sceGuSync(0, 0);
     
     sceDisplayWaitVblankStart();
     sceGuDisplay(GU_TRUE);
     
-    float angle = 0.0f; 
+    float angle = 0.1f;
     
     while (!g_exitRequest)
     {
         sceCtrlReadBufferPositive(&g_padData, 1);
-        
-        if (!(g_padData.Buttons & PSP_CTRL_CROSS)) {
-            angle += 0.05f;
-        }
         
         sceGuStart(GU_DIRECT, g_dspList);
         
@@ -124,28 +162,24 @@ int main()
         sceGuClearDepth(0);
         
         sceGuClear(GU_COLOR_BUFFER_BIT | GU_DEPTH_BUFFER_BIT);
-        
-        // Setup matrices
-        
-        sceGumMatrixMode(GU_PROJECTION);
-        sceGumLoadIdentity();
-        sceGumPerspective(75.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
-        
-        sceGumMatrixMode(GU_VIEW);
-        sceGumLoadIdentity();
+               
+        sceGumMatrixMode(GU_MODEL);
         {
-            ScePspFVector3 eye = { 0.0f, 0.0f,-2.0f };
-            ScePspFVector3 at  = { 0.0f, 0.0f, 0.0f }; 
-            ScePspFVector3 up  = { 0.0f, 1.0f, 0.0f };
-            
-            sceGumLookAt(&eye, &at, &up);
+            if (g_padData.Buttons & PSP_CTRL_UP) {
+                sceGumRotateX(-angle);
+            }
+            if (g_padData.Buttons & PSP_CTRL_DOWN) {
+                sceGumRotateX(angle);
+            }
+            if (g_padData.Buttons & PSP_CTRL_RIGHT) {
+                sceGumRotateY(angle);
+            }
+            if (g_padData.Buttons & PSP_CTRL_LEFT) {
+                sceGumRotateY(-angle);
+            }
         }
         
-        sceGumMatrixMode(GU_MODEL);
-        sceGumLoadIdentity();
-        sceGumRotateY(angle);
-        
-        sceGumDrawArray(GU_TRIANGLES, VERTEX_FORMAT, nVertices, NULL, vertices);
+        sceGumDrawArray(GU_TRIANGLES, VERTEX_FORMAT, nIndices, indices, vertices);
         
         sceGuFinish();
         sceGuSync(0, 0);
