@@ -11,9 +11,11 @@
 #include <stdint.h>
 #include <assert.h>
 
+#include "CHIHUAHUA.h"
+
 #define ALIGN(n) __attribute__((aligned(n)))
 
-#define VERTEX_FORMAT (GU_COLOR_8888 | GU_VERTEX_32BITF | GU_INDEX_16BIT | GU_TRANSFORM_3D)
+#define VERTEX_FORMAT (GU_TEXTURE_32BITF | GU_COLOR_8888 | GU_VERTEX_32BITF | GU_INDEX_16BIT | GU_TRANSFORM_3D)
 
 #define SCREEN_W 480
 #define SCREEN_H 272
@@ -30,43 +32,24 @@ SceCtrlData g_padData;
 
 static uint32_t ALIGN(16) g_dspList[262144];
 
-typedef struct
-{
+typedef struct {
+    float TexCoord[2];
     uint32_t DiffuseColor;
     float Position[3];
 } VertexInput;
 
 const VertexInput ALIGN(16) vertices[] =
 {
-    { 0xFF000000, { -1.0f, -1.0f, -1.0f } },
-    { 0xFF0000FF, { -1.0f, -1.0f,  1.0f } },
-    { 0xFF00FF00, { -1.0f,  1.0f, -1.0f } },
-    { 0xFF00FF00, { -1.0f,  1.0f,  1.0f } },
-    { 0xFFFF0000, {  1.0f, -1.0f, -1.0f } },
-    { 0xFFFF00FF, {  1.0f, -1.0f,  1.0f } },
-    { 0xFFFFFF00, {  1.0f,  1.0f, -1.0f } },
-    { 0xFFFFFFFF, {  1.0f,  1.0f,  1.0f } },
+    { { 0.0f, 1.0f }, 0x00FFFFFF, { -1.0f, -1.0f,  1.0f } },
+    { { 0.0f, 0.0f }, 0x00FFFFFF, { -1.0f,  1.0f,  1.0f } },
+    { { 1.0f, 1.0f }, 0x00FFFFFF, {  1.0f, -1.0f,  1.0f } },
+    { { 1.0f, 0.0f }, 0x00FFFFFF, {  1.0f,  1.0f,  1.0f } }
 };
 
 const uint16_t indices[] = 
 {
     0,2,1,
     1,2,3,
-
-    4,5,6,
-    5,7,6,
-
-    0,1,5,
-    0,5,4,
-
-    2,6,7,
-    2,7,3,
-
-    0,4,6,
-    0,6,2,
-
-    1,3,7,
-    1,7,5,
 }; const uint32_t nIndices = sizeof(indices) / sizeof(uint16_t);
 
 // VRAM Alloc
@@ -126,7 +109,8 @@ int main()
     sceGuEnable(GU_DEPTH_TEST);
     sceGuEnable(GU_CLIP_PLANES);
     
-    sceGuDisable(GU_TEXTURE_2D);
+    sceGuEnable(GU_TEXTURE_2D);
+    sceGuDisable(GU_LIGHTING);
     
     // Setup transform matrices
     
@@ -178,6 +162,12 @@ int main()
                 sceGumRotateY(-angle);
             }
         }
+        
+        // Setup texture
+        
+        sceGuTexMode(GU_PSM_8888, 0, 0, 0);
+		sceGuTexFilter(GU_LINEAR, GU_LINEAR);
+        sceGuTexImage(0, 64, 64, 64, (uint32_t*)CHIHUAHUA);
         
         sceGumDrawArray(GU_TRIANGLES, VERTEX_FORMAT, nIndices, indices, vertices);
         
